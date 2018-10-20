@@ -92,6 +92,7 @@ class ShipEnv:
     def render(self, ):
         if self.viewer is None:
             self.viewer = Viewer()
+            self.viewer.plot_boundary([[0, 150], [2000, 150], [2000, -150], [0, -150]])
             self.viewer.plot_guidance_line(self.point_a, self.point_b)
         self.viewer.plot_position(self.last_pos[0], self.last_pos[1],  self.last_pos[2],  self.last_action[0])
 
@@ -108,7 +109,7 @@ if __name__ == '__main__':
             observation = env.reset()
             for t in range(10000):
                 env.render()
-                action = np.array([-0.1])
+                action = np.array([-0.01])
                 observation, reward, done, info = env.step(action)
                 if done:
                     print("Episode finished after {} timesteps".format(t + 1))
