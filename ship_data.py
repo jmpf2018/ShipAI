@@ -69,7 +69,7 @@ class ShipExperiment:
         """
         st = datetime.datetime.fromtimestamp(t.time()).strftime('%Y-%m-%d-%H')
         name = st+descr
-        with open('../_experiments/'+name, 'wb') as f:
+        with open('_experiments/'+name, 'wb') as f:
             pickle.dump(self.__dict__, f, 2)
         f.close()
 

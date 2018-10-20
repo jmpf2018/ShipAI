@@ -12,7 +12,7 @@ from simulator import Simulator
 class ShipEnv:
     def __init__(self):
         self.action_space = spaces.Box(low=np.array([-1.0]), high=np.array([1.0]))
-        self.obs_space = spaces.Box(low=np.array([0, -np.pi/2, 0, -4, -1.0]), high=np.array([150, np.pi/2, 4.0, 4.0, 1.0]))
+        self.observation_space = spaces.Box(low=np.array([0, -np.pi / 2, 0, -4, -1.0]), high=np.array([150, np.pi / 2, 4.0, 4.0, 1.0]))
         self.init_space = spaces.Box(low=np.array([0, -np.pi/15, 2.0, 0.2,  -0.1]), high=np.array([30, np.pi/15, 3.0, 0.3, 0.1]))
         self.ship_data = ShipExperiment()
         self.last_pos = np.zeros(3) # last_pos = [xg yg thg]
@@ -26,7 +26,7 @@ class ShipEnv:
         self.viewer = None
 
     def step(self, action):
-        action = action * np.sign(self.last_pos[1])
+        action = - action * np.sign(self.last_pos[1])*0.1
         rot_action = 0.1
         state_prime = self.simulator.step(angle_level=action[0], rot_level=rot_action)
         # transforma variáveis do simulador em variáveis observáveis
@@ -69,7 +69,7 @@ class ShipEnv:
                         theta / 50) ** 2
 
     def end(self, state_prime, obs):
-        if not self.obs_space.contains(obs) or -1 > state_prime[0] or state_prime[0] > 2000 or 160 < state_prime[1] or state_prime[1]< -160:
+        if not self.observation_space.contains(obs) or -1 > state_prime[0] or state_prime[0] > 2000 or 160 < state_prime[1] or state_prime[1]< -160:
             self.viewer.end_episode()
             return True
         else:
@@ -89,7 +89,7 @@ class ShipEnv:
         self.ship_data.new_iter(state, self.convert_state(state), np.array([0]), np.array([0]))
         return self.convert_state(state)
 
-    def render(self, ):
+    def render(self, mode='human'):
         if self.viewer is None:
             self.viewer = Viewer()
             self.viewer.plot_boundary([[0, 150], [2000, 150], [2000, -150], [0, -150]])
@@ -100,19 +100,19 @@ class ShipEnv:
         self.viewer.freeze_scream()
 
 
-if __name__ == '__main__':
-    mode = 'normal'
-    if mode == 'normal':
-        env = ShipEnv()
-        shipExp = ShipExperiment()
-        for i_episode in range(2):
-            observation = env.reset()
-            for t in range(10000):
-                env.render()
-                action = np.array([-0.01])
-                observation, reward, done, info = env.step(action)
-                if done:
-                    print("Episode finished after {} timesteps".format(t + 1))
-                    break
-        env.close()
-
+# if __name__ == '__main__':
+#     mode = 'normal'
+#     if mode == 'normal':
+#         env = ShipEnv()
+#         shipExp = ShipExperiment()
+#         for i_episode in range(2):
+#             observation = env.reset()
+#             for t in range(10000):
+#                 env.render()
+#                 action = np.array([-0.01])
+#                 observation, reward, done, info = env.step(action)
+#                 if done:
+#                     print("Episode finished after {} timesteps".format(t + 1))
+#                     break
+#         env.close()
+#
