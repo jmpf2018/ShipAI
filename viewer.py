@@ -12,7 +12,7 @@ class Viewer:
         turtle.mode('logo')
         turtle.setworldcoordinates(0, -500, 2000, 500)
         turtle.setup()
-        turtle.screensize(2000, 1000, 'white')
+        turtle.screensize(4000, 1000, 'white')
         w_vessel = 5  # Metade da largura da embarcacao
         turtle.register_shape('vessel', (
             (0, self.l_vessel), (w_vessel, self.l_vessel / 2), (w_vessel, -self.l_vessel), (-w_vessel, -self.l_vessel),
@@ -39,7 +39,7 @@ class Viewer:
         self.vessel.setheading(converted_angle)
         self.rudder.setpos(x - self.l_vessel * math.cos(math.pi * converted_angle / 180),
                            y - self.l_vessel * math.sin(math.pi * converted_angle / 180))
-        self.rudder.setheading(converted_angle + rud_angle)
+        self.rudder.setheading(converted_angle - rud_angle)
         self.vessel.pendown()
 
     def plot_guidance_line(self, point_a, point_b):
