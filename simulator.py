@@ -37,10 +37,23 @@ class Simulator:
         self.B = 42             # Beam
         self.S = 27342        # wet surface
 
-
         ## Water constants
         self.pho = 1.025 * 10**3# water density
         self.mi = 10**-3  # water viscosity
+
+        ## Rudder Constants
+        self.A_rud = 68 # propulsor thrus
+        self.delta_x = self.x_prop - self.x_rudder  # distance between rudder and propulsor
+        self.r_aspect = 2 # aspect ration
+
+        ## Propulsor constants:
+        self.D_prop = 7.2 # Diameter
+        self.n_prop = 1.6 # rotation
+
+        # some modes of simulator
+        self.system_dynamics = 'simple'
+        self.prop_dynamics = 'complex'
+
 
     def reset_start_pos(self, global_vector):
         x0, y0, theta0, vx0, vy0, theta_dot0 = global_vector[0], global_vector[1], global_vector[2], global_vector[3], global_vector[4], global_vector[5]
@@ -157,7 +170,7 @@ class Simulator:
         x4 = local_states[3] #du
         x5 = local_states[4] #dv
         x6 = local_states[5] #dtheta
-        beta = self.current_action[0]*np.pi/12   #leme
+        beta = self.current_action[0]*np.pi/6   #leme (-30 à 30)
         alpha = self.current_action[1]    #propulsor
 
         vc = np.sqrt(x4 ** 2 + x5 ** 2)
@@ -182,9 +195,27 @@ class Simulator:
         F1z = 0.5 * self.pho * vc ** 2 * self.L * self.Draft * C6
 
         # Propulsion model
-        Fpx = np.cos(beta) * self.force_prop_max * alpha
-        Fpy = -np.sin(beta) * self.force_prop_max * alpha
-        Fpz = -np.sin(beta) * self.force_prop_max * self.x_rudder
+        if self.prop_dynamics == 'simple':
+            Fpx = np.cos(beta) * self.force_prop_max * alpha * np.abs(2/(1+x1))
+            Fpy = -np.sin(beta) * self.force_prop_max * alpha * np.abs(2/(1+x1)) * 0.5
+            Fpz = Fpy * self.force_prop_max * self.x_rudder
+        else:
+            #Propulsion model complex -- > the best one:
+            J = x4*0.6/(1.6*7.2)
+            kt = 0.5 - 0.5*J
+            n_prop_ctrl = self.n_prop*alpha
+            Fpx = kt*self.pho*n_prop_ctrl**2*self.D_prop**4
+
+            kr = 0.5 + 0.5 / (1 + 0.15 * self.delta_x/self.D_prop)
+            ur = np.sqrt(x4 ** 2 + kr * 4 * kt * n_prop_ctrl ** 2 * self.D_prop ** 2 / np.pi)
+            vr = -0.8 * x5
+            Ur = np.sqrt(ur ** 2 + vr ** 2)
+            fa = 6.13 * self.r_aspect / (self.r_aspect + 2.25)
+            ar = beta - np.arctan2(vr, ur)
+            FN = 0.5*self.pho*self.A_rud*fa*Ur**2*np.sin(ar)
+            Fpy = - FN * np.cos(beta)
+            Fpz = Fpy * self.x_rudder
+
 
         # without resistence
         #F1u, F1v, F1z = 0, 0, 0
@@ -193,32 +224,33 @@ class Simulator:
         fx1 = x4
         fx2 = x5
         fx3 = x6
+
         # simple model
-        # fx4 = (F1u + Fpx)/(self.M + self.M11)
-        # fx5 = (F1v + Fpy)/(self.M + self.M22)
-        # fx6 = (F1z + Fpz)/(self.Iz + self.M66)
+        if self.system_dynamics =='complex':
+            a11 = (self.M)
+            a12 = (self.M * self.x_g)
+            a21 = (self.M * self.x_g)
+            a22 = (self.Iz )
+            b1 = -(self.M) * x4 * x6 + F1v + Fpy
+            b2 = -(self.M * self.x_g)* x6 + F1z + Fpz
+            A = np.array([[a11, a12], [a21, a22]])
+            B = np.array([b1, b2])
+            fx56 = np.dot(np.linalg.inv(A), B.transpose())
 
-        a11 = (self.M)
-        a12 = (self.M * self.x_g)
-        a21 = (self.M * self.x_g)
-        a22 = (self.Iz )
-        b1 = -(self.M) * x4 * x6 + F1v + Fpy
-        b2 = -(self.M * self.x_g)* x6 + F1z + Fpz
-        A = np.array([[a11, a12], [a21, a22]])
-        B = np.array([b1, b2])
-        fx56 = np.dot(np.linalg.inv(A), B.transpose())
-
-        fx4 = x6 * x5 + x6 ** 2 + (F1u + Fpx) / self.M
-        fx5 = fx56[0]
-        fx6 = fx56[1]
-
-
+            fx4 = x6 * x5 + x6 ** 2 + (F1u + Fpx) / self.M
+            fx5 = fx56[0]
+            fx6 = fx56[1]
+        else:
+            # Propulsion model simple -- > the best one:
+            fx4 = (F1u + Fpx)/(self.M + self.M11)
+            fx5 = (F1v + Fpy)/(self.M + self.M22)
+            fx6 = (F1z + Fpz)/(self.Iz + self.M66)
 
         fx = np.array([fx1, fx2, fx3, fx4, fx5, fx6])
         return fx
 
     def scipy_runge_kutta(self, fun, y0, t0=0, t_bound=10):
-        return RK45(fun, t0, y0, t_bound,  rtol=self.time_span/self.number_iterations, atol=1e-5)
+        return RK45(fun, t0, y0, t_bound,  rtol=self.time_span/self.number_iterations, atol=1e-4)
 
     def runge_kutta(self, x, fx, n, hs):
         k1 = []
@@ -277,8 +309,8 @@ class Simulator:
 
     def _local_ds_global_ds(self, theta, local_states):
         """
-        The function recieves two local states, one reffering to the state before the runge-kutta and other refering to a
-        state after runge-kutta and then compute the global state bated on the transiction
+        The function recieves two local states, one refering to the state before the runge-kutta and other refering to a
+        state after runge-kutta and then compute the global state based on the transition
 
         :param local_states_0: Local state before the transition
         :param local_states_1: Local state after the transition
