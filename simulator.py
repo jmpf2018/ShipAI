@@ -227,21 +227,21 @@ class Simulator:
 
         # simple model
         if self.system_dynamics =='complex':
-            a11 = (self.M)
-            a12 = (self.M * self.x_g)
-            a21 = (self.M * self.x_g)
-            a22 = (self.Iz )
-            b1 = -(self.M) * x4 * x6 + F1v + Fpy
-            b2 = -(self.M * self.x_g)* x6 + F1z + Fpz
+            a11 = (self.M+self.M22)
+            a12 = (self.M * self.x_g + self.M26)
+            a21 = (self.M * self.x_g + self.M26)
+            a22 = (self.Iz + self.M66)
+            b1 = -(self.M+self.M11) * x4 * x6 + F1v + Fpy
+            b2 = -(self.M * self.x_g+self.M26)* x6*x4 + F1z + Fpz
             A = np.array([[a11, a12], [a21, a22]])
             B = np.array([b1, b2])
             fx56 = np.dot(np.linalg.inv(A), B.transpose())
 
-            fx4 = x6 * x5 + x6 ** 2 + (F1u + Fpx) / self.M
+            fx4 = ((self.M+self.M22)*x5*x6 + (self.M*self.x_g+self.M26)*x6**2 + (F1u + Fpx))/(self.M+self.M11)
             fx5 = fx56[0]
             fx6 = fx56[1]
         else:
-            # Propulsion model simple -- > the best one:
+            # main model simple -- > the best one:
             fx4 = (F1u + Fpx)/(self.M + self.M11)
             fx5 = (F1v + Fpy)/(self.M + self.M22)
             fx6 = (F1z + Fpz)/(self.Iz + self.M66)

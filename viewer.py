@@ -76,6 +76,10 @@ class Viewer:
 
     def end_episode(self, ):
         self.vessel.penup()
+        self.rudder.penup()
+
+    def restart_plot(self):
+        self.vessel.pendown()
 
 if __name__ == '__main__':
     viewer = Viewer()
