@@ -18,11 +18,20 @@ class Simulator:
         ##Vessel Constants
 
         self.M = 115000      *10**3
+        self.Iz = 414000000 * 10 ** 3
+
         self.M11 = 14840.4   * 10**3
         self.M22 = 174050    * 10**3
         self.M26 = 38369.6   * 10**3
         self.M66 = 364540000 * 10**3
-        self.Iz = 414000000  * 10**3
+        self.M62 = 36103 * 10**3
+
+        self.D11 = 0.35370 * 10**3
+        self.D22 = 1.74129 * 10**3
+        self.D26 = 1.95949 * 10**3
+        self.D62 = 1.85586 * 10**3
+        self.D66 = 3.23266 * 10**3
+
         self.L = 244.74 #length
         self.Draft = 15.3
         self.x_g = 2.2230# center mass
@@ -51,7 +60,7 @@ class Simulator:
         self.n_prop = 1.6 # rotation
 
         # some modes of simulator
-        self.system_dynamics = 'simple'
+        self.system_dynamics = 'complex'
         self.prop_dynamics = 'complex'
 
 
@@ -226,20 +235,31 @@ class Simulator:
         fx3 = x6
 
         # simple model
-        if self.system_dynamics =='complex':
-            a11 = (self.M+self.M22)
-            a12 = (self.M * self.x_g + self.M26)
-            a21 = (self.M * self.x_g + self.M26)
-            a22 = (self.Iz + self.M66)
-            b1 = -(self.M+self.M11) * x4 * x6 + F1v + Fpy
-            b2 = -(self.M * self.x_g+self.M26)* x6*x4 + F1z + Fpz
-            A = np.array([[a11, a12], [a21, a22]])
-            B = np.array([b1, b2])
-            fx56 = np.dot(np.linalg.inv(A), B.transpose())
+        if self.system_dynamics == 'complex':
+            Mrb = np.array([[self.M, 0, 0], [0, self.M, self.M*self.x_g], [0, self.M*self.x_g, self.Iz]])
+            Crb = np.array([[0, 0, -self.M*(self.x_g*x6+x5)], [0, 0, self.M*x4], [self.M*(self.x_g*x6+x5), -self.M*x4, 0]])
+            Ma  = np.array([[self.M11, 0, 0], [0, self.M22, self.M26], [0, self.M62, self.M66]])
 
-            fx4 = ((self.M+self.M22)*x5*x6 + (self.M*self.x_g+self.M26)*x6**2 + (F1u + Fpx))/(self.M+self.M11)
-            fx5 = fx56[0]
-            fx6 = fx56[1]
+            ca13 = -(self.M22*x5 + self.M26*x6)
+            ca23 = self.M11*x4
+            Ca  = np.array([[0, 0, ca13], [0, 0, ca23], [-ca13, -ca23, 0]])
+            Dl = np.array([[self.D11, 0, 0], [0, self.D22, self.D26], [0, self.D62, self.D66]])
+            vv = np.array([x4, x5, x6])
+
+
+            MM = Mrb+Ma
+            CC = Crb
+
+            Fext = np.array([[F1u + Fpx], [F1v + Fpy], [F1z + Fpz]])
+            A = MM
+            B = -np.dot(CC, vv.transpose()) + Fext.transpose()
+
+            ff = np.linalg.solve(A, B.transpose())
+
+            fx4 = ff[0]
+            fx5 = ff[1]
+            fx6 = ff[2]
+
         else:
             # main model simple -- > the best one:
             fx4 = (F1u + Fpx)/(self.M + self.M11)
