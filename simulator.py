@@ -10,7 +10,7 @@ class Simulator:
         self.last_local_state = None
         self.current_action = None
         self.steps = 0
-        self.time_span = 10          # 2 seconds for each iteration
+        self.time_span = 10          # 20 seconds for each iteration
         self.number_iterations = 100  # 100 iterations for each step
         self.integrator = None
         self.rk_mode = 'scipy_rk'
@@ -183,7 +183,7 @@ class Simulator:
         alpha = self.current_action[1]    #propulsor
 
         vc = np.sqrt(x4 ** 2 + x5 ** 2)
-        gamma = np.pi + np.arctan2(x5, x4)
+        gamma = np.pi+np.arctan2(x5, x4)
 
         # Composing resistivity forces
         Re = self.pho * vc * self.L / self.mi
@@ -191,7 +191,7 @@ class Simulator:
             C0=0
         else:
             C0 = 0.0094 * self.S / (self.Draft * self.L) / (np.log10(Re) - 2) ** 2
-        C1 = C0 * np.cos(gamma) + (np.cos(3 * gamma) - np.cos(gamma)) * np.pi * self.Draft / (8 * self.L)
+        C1 = C0 * np.cos(gamma) #+ (-np.cos(3 * gamma) + np.cos(gamma)) * np.pi * self.Draft / (8 * self.L)
         F1u = 0.5 * self.pho * vc ** 2 * self.L * self.Draft * C1
 
         C2 = (self.Cy - 0.5 * np.pi * self.Draft / self.L) * np.sin(gamma) * np.abs(np.sin(gamma)) + 0.5 * np.pi * self.Draft / self.L * (
@@ -201,13 +201,13 @@ class Simulator:
         C6 = -self.lp / self.L * self.Cy * np.sin(gamma) * np.abs(np.sin(gamma))
         C6 = C6 - np.pi * self.Draft / self.L * np.sin(gamma) * np.cos(gamma)
         C6 = C6 - (0.5 + 0.5 * np.abs(np.cos(gamma))) ** 2 * np.pi * self.Draft / self.L * (0.5 - 2.4 * self.Draft / self.L) * np.sin(gamma) * np.abs(np.cos(gamma))
-        F1z = 0.5 * self.pho * vc ** 2 * self.L * self.Draft * C6
+        F1z = 0.5 * self.pho * vc ** 2 * self.L**2 * self.Draft * C6*0.21
 
         # Propulsion model
         if self.prop_dynamics == 'simple':
             Fpx = np.cos(beta) * self.force_prop_max * alpha * np.abs(2/(1+x1))
-            Fpy = -np.sin(beta) * self.force_prop_max * alpha * np.abs(2/(1+x1)) * 0.5
-            Fpz = Fpy * self.force_prop_max * self.x_rudder
+            Fpy = -np.sin(beta) * self.force_prop_max * alpha * np.abs(2/(1+x1))
+            Fpz = Fpy * self.x_rudder
         else:
             #Propulsion model complex -- > the best one:
             J = x4*0.6/(1.6*7.2)
@@ -220,10 +220,10 @@ class Simulator:
             vr = -0.8 * x5
             Ur = np.sqrt(ur ** 2 + vr ** 2)
             fa = 6.13 * self.r_aspect / (self.r_aspect + 2.25)
-            ar = beta - np.arctan2(vr, ur)
+            ar = beta
             FN = 0.5*self.pho*self.A_rud*fa*Ur**2*np.sin(ar)
-            Fpy = - FN * np.cos(beta)
-            Fpz = Fpy * self.x_rudder
+            Fpy = -FN * np.cos(beta)
+            Fpz = -FN * np.cos(beta) * self.x_rudder *0.5
 
 
         # without resistence
@@ -248,11 +248,11 @@ class Simulator:
 
 
             MM = Mrb+Ma
-            CC = Crb
+            CC = Crb+Dl
 
             Fext = np.array([[F1u + Fpx], [F1v + Fpy], [F1z + Fpz]])
             A = MM
-            B = -np.dot(CC, vv.transpose()) + Fext.transpose()
+            B = np.dot(CC, vv.transpose()) + Fext.transpose()
 
             ff = np.linalg.solve(A, B.transpose())
 
