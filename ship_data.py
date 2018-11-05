@@ -141,10 +141,35 @@ class ShipExperiment:
                     plt.pause(0.0001)
 
     def plot_obs(self, iter=0):
-        img, ax = plt.subplots(3, sharex=True)
-        for i in range(3):
-            ax[i].set_title("Observed states")
-            ax[i].set_ylabel("Obs" + str(i))
-            ax[i].set_xlabel('Steps')
-            ax[i].plot(np.arange(0, self.steps[iter] + 1, 1), self.observations[iter][:, i])
+        img, ax = plt.subplots(5, sharex=True)
+        if iter == -1:
+            for j in range(self.iterations):
+                for i in range(5):
+                    ax[i].set_title("Observed states")
+                    ax[i].set_ylabel("Obs" + str(i))
+                    ax[i].set_xlabel('Steps')
+                    ax[i].plot(np.arange(0, self.steps[j] + 1, 1), self.observations[j][:, i])
+        else:
+            for i in range(5):
+                ax[i].set_title("Observed states")
+                ax[i].set_ylabel("Obs" + str(i))
+                ax[i].set_xlabel('Steps')
+                ax[i].plot(np.arange(0, self.steps[iter] + 1, 1), self.observations[iter][:, i])
+        plt.show()
+
+    def compute_settling_time(self, iter=0):
+        d = self.observations[iter][:, 0]
+        for j in range(len(d)):
+            if j>2 and d[j]<15:
+                return j*10
+        return len(d)
+
+    def plot_settling_time(self):
+        st = np.zeros(self.iterations)
+        for i in range(self.iterations):
+            st[i] = self.compute_settling_time(i)
+        plt.title('Settling time')
+        plt.xlabel('Episode')
+        plt.ylabel('time')
+        plt.plot(st)
         plt.show()
