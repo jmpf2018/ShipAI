@@ -26,7 +26,7 @@ Where:
 ![Imgur](https://i.imgur.com/lmf05VS.png)
 
 ## Actions
-The action are the input parameters for controlling the ship maneuver movement. The forces that make the ship controllable are the rudder and propulsion forces. They have the vector form of    ![latex](https://latex.codecogs.com/gif.latex?A_V = [A_l, A_p]) , where ![latex](https://latex.codecogs.com/gif.latex?A_l) is the dimensionless rudder command and $ A_p $ the dimensionless propulsion command, such that ![latex](https://latex.codecogs.com/gif.latex?A_l \in [-1, 1 ]) and ![latex](https://latex.codecogs.com/gif.latex?A_p \in [0, 1]). These parameters have a direct proportional relation with the rudder angle and the propulsion
+The action are the input parameters for controlling the ship maneuver movement. The forces that make the ship controllable are the rudder and propulsion forces. They have the vector form of    ![latex](https://latex.codecogs.com/gif.latex?A_V&space;=&space;[A_l,&space;A_p]) , where ![latex](https://latex.codecogs.com/gif.latex?A_l) is the dimensionless rudder command and ![latex](https://latex.codecogs.com/gif.latex?A_p)  the dimensionless propulsion command, such that ![latex](https://latex.codecogs.com/gif.latex?A_l&space;\in&space;[-1,&space;1&space;]) and ![latex](https://latex.codecogs.com/gif.latex?A_p&space;\in&space;[0,&space;1]). These parameters have a direct proportional relation with the rudder angle and the propulsion
 
 ## How to install ShipAI?
 1. Make sure you have all necessary modules installed:
@@ -62,10 +62,17 @@ or
 ## How to cite us?
 
 @misc{shipAI,
+
     author = {Jonathas Pereira and Rodrigo Pereira Abou Rejaili},
+    
     title = {ShipAI},
+    
     year = {2018},
+    
     publisher = {GitHub},
+    
     journal = {GitHub repository},
+    
     howpublished = {\url{https://github.com/jmpf2018/ShipAI}},
+    
 }
