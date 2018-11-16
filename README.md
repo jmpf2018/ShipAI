@@ -11,6 +11,7 @@ The main purpose of the navigation task was defined as follows:
 > Use the rudder and propulsion controls to perform a defined linear navigation path along a channel
 
 The states chosen for the application of RL in the task of the ship were as follows:
+
 ![latex](https://latex.codecogs.com/gif.latex?s&space;=&space;(d,\theta,v_x,v_y,\dot{\theta}))
 
 Where  ![latex](https://latex.codecogs.com/gif.latex?d) is the distance from the center of mass of the ship to the guideline; $\theta$ is the angle between the longitudinal axis of the ship and the guideline;  ![latex](https://latex.codecogs.com/gif.latex?v_x) is the horizontal speed of the ship in its center of mass (in the direction of the guideline; ![latex](https://latex.codecogs.com/gif.latex?v_y ) is the vertical speed of the ship in its center of mass (perpendicular to the guideline); ![latex](https://latex.codecogs.com/gif.latex?\dot{\theta}) is the angular velocity of the ship.
@@ -20,9 +21,11 @@ Where  ![latex](https://latex.codecogs.com/gif.latex?d) is the distance from the
  
 ## Reward
 The reward function is defined as:
+
 ![Imgur](https://i.imgur.com/gikYyOm.gif)
 
 Where:
+
 ![Imgur](https://i.imgur.com/lmf05VS.png)
 
 ## Actions
