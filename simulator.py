@@ -10,7 +10,7 @@ class Simulator:
         self.last_local_state = None
         self.current_action = None
         self.steps = 0
-        self.time_span = 10          # 20 seconds for each iteration
+        self.time_span = 10           # 20 seconds for each iteration
         self.number_iterations = 100  # 100 iterations for each step
         self.integrator = None
         self.rk_mode = 'scipy_rk'
@@ -98,78 +98,6 @@ class Simulator:
 
     def simulate(self, local_states):
         """
-        Suppose that the vessel is a simple bloc with the following dynamics:
-        u :  local coordinate aligned with the vessel
-        v :  local coordinate aligned with the vessel
-
-        u = cos(theta) X + sin(theta) Y
-        v = -sin(theta) X + cos(theta) Y
-        dtheta : equal for both
-
-
-        (M+M11) * ddu     - (M+M22) * dv * dtheta        - (M*xg + M26) * dtheta**2    =  F1u + Fpx
-        (M+M22) * ddv     + (M*xg + M26)*ddtheta + (M + M11)*du * dtheta       = F1v + Fpy
-        (Iz+M66)* ddtheta + (M*xg+M26)*ddy       + (M*xg + M26) * dudtheta     = F1v + Tprop
-
-        Where:
-
-        F1u = 0.5 * pho * Vc**2 * L * Draft * C1
-            C1 = C0*cos(gamma)+( cos(3*gamma - cos(gamma) ) ) * pi * Draft / (8 * L)
-                C0 = 0.0094 * S /( Draft * L) / (log10(Re)-2)**2
-                    Re = pho*Vc*L/mi
-
-        F1v = 0.5 * pho * Vc**2 * L * Draft * C2
-            C2 = (Cy - 0.5*pi*Draft/L)*sin(gamma)*mod(sin(gamma)) + 0.5*pi*Draft/L * (sin(gamma)**3) + pi*Draft/L*(1+0.4*Cb*B/Draft)*sin(gamma)*abs(cos(gamma))
-
-        F1z = 0.5 * pho * Vc**2 * L * Draft * C6
-            C6 =    -lp/L * Cy * sin(gamma) * mod(sin(gamma))
-            C6 = C6 -pi*Draft/L * sin(gamma) * cos(gamma)
-            C6 = C6 - ( 0.5 + 0.5*mod( cos(gamma) ) )**2 * pi*Draft/L*(0.5 - 2.4*Draft/L)*sin(gamma)* mod(cos(gamma))
-
-        # Suppose no natural waterflow
-        Vc = sqrt(u**2+v**2)
-        gamma = pi + atan2(v, u)
-
-        # modelo simlificado de propulsão
-        beta = actions[0]
-        alpha = actions[1]
-        Fpx = cos(beta) * force_prop_max * alpha
-        Fpy = sin(beta) * force_prop_max * alpha
-        Fpz = sin(beta) * force_prop_max * alpha * x_rudder
-
-        x1= u
-        x2 = du
-
-        x3 = v
-        x4 = dv
-
-        x5 = th
-        x6 = dth
-
-        fx1 =   x2
-        fx2 =  (F1u + Fpx + (M+M22) * x4 * x6  - (M*xg + M26) * x6**2 ) / (M+M11)
-
-        fx3 = x4
-        fx5 = x6
-
-        a11 = (M+M22)
-        a12 = (M*xg + M26)
-        a21 = (Iz+M66)
-        a22 = (M*xg+M26)
-        b1 =  -(M + M11)*x2 * x6  + F1v + Fpy
-        b2 =  -(M*xg + M26) * x2*x6 + F1v + Tprop
-
-        A = np.array([[a11; a12];[a21; a22])
-        B = np.array([b1; b2])
-        fx46 = A.inv*B
-        fx4 = fx46[0]
-        fx6 = fx46[1]
-
-        fx = [fx1 fx2 fx3 fx4]
-
-
-
-
         :param local_states: Space state
         :return df_local_states
         """
@@ -191,7 +119,7 @@ class Simulator:
             C0=0
         else:
             C0 = 0.0094 * self.S / (self.Draft * self.L) / (np.log10(Re) - 2) ** 2
-        C1 = C0 * np.cos(gamma) #+ (-np.cos(3 * gamma) + np.cos(gamma)) * np.pi * self.Draft / (8 * self.L)
+        C1 = C0 * np.cos(gamma) + (-np.cos(3 * gamma) + np.cos(gamma)) * np.pi * self.Draft / (8 * self.L)
         F1u = 0.5 * self.pho * vc ** 2 * self.L * self.Draft * C1
 
         C2 = (self.Cy - 0.5 * np.pi * self.Draft / self.L) * np.sin(gamma) * np.abs(np.sin(gamma)) + 0.5 * np.pi * self.Draft / self.L * (
@@ -201,7 +129,7 @@ class Simulator:
         C6 = -self.lp / self.L * self.Cy * np.sin(gamma) * np.abs(np.sin(gamma))
         C6 = C6 - np.pi * self.Draft / self.L * np.sin(gamma) * np.cos(gamma)
         C6 = C6 - (0.5 + 0.5 * np.abs(np.cos(gamma))) ** 2 * np.pi * self.Draft / self.L * (0.5 - 2.4 * self.Draft / self.L) * np.sin(gamma) * np.abs(np.cos(gamma))
-        F1z = 0.5 * self.pho * vc ** 2 * self.L**2 * self.Draft * C6*0.21
+        F1z = 0.5 * self.pho * vc ** 2 * self.L**2 * self.Draft * C6
 
         # Propulsion model
         if self.prop_dynamics == 'simple':
@@ -223,7 +151,7 @@ class Simulator:
             ar = beta
             FN = 0.5*self.pho*self.A_rud*fa*Ur**2*np.sin(ar)
             Fpy = -FN * np.cos(beta)
-            Fpz = -FN * np.cos(beta) * self.x_rudder *0.5
+            Fpz = -FN * np.cos(beta) * self.x_rudder
 
 
         # without resistence
@@ -250,7 +178,7 @@ class Simulator:
             MM = Mrb+Ma
             CC = Crb+Dl
 
-            Fext = np.array([[F1u + Fpx], [F1v + Fpy], [F1z + Fpz]])
+            Fext = np.array([[F1u + Fpx], [F1v + Fpy], [0.21*F1z + 0.5*Fpz]])
             A = MM
             B = np.dot(CC, vv.transpose()) + Fext.transpose()
 
@@ -259,7 +187,24 @@ class Simulator:
             fx4 = ff[0]
             fx5 = ff[1]
             fx6 = ff[2]
+        elif self.system_dynamics == 'linearized':
+            a11 = self.M + self.M11
+            b1 = -(self.M + self.M22) * x5 * x6 - (self.M * self.x_g + 0.5 * (self.M26 + self.M62)) * x6 ** 2
 
+            fx4 = (b1+F1u + Fpx)/ a11
+
+            A = np.array([[self.M + self.M26, self.M * self.x_g + self.M22], [self.M * self.x_g + self.M62, self.Iz + self.M66]])
+
+            B1 = [[self.D26, self.M * x4 + self.D22], [self.M62, self.x_g * x4 + self.D66]]
+
+            vv = np.array([x5, x6])
+            Fext = np.array([[F1v + Fpy], [F1z + Fpz]])
+
+            B = np.dot(B1, vv.transpose()) + Fext.transpose()
+            ff = np.linalg.solve(A, B.transpose())
+
+            fx5 = ff[0]
+            fx6 = ff[1]
         else:
             # main model simple -- > the best one:
             fx4 = (F1u + Fpx)/(self.M + self.M11)
@@ -331,7 +276,6 @@ class Simulator:
         """
         The function recieves two local states, one refering to the state before the runge-kutta and other refering to a
         state after runge-kutta and then compute the global state based on the transition
-
         :param local_states_0: Local state before the transition
         :param local_states_1: Local state after the transition
         :return: global states
