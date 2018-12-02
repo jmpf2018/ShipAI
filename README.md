@@ -52,15 +52,17 @@ or
 ![Imgur](https://i.imgur.com/2RMsLvn.png)
 
 5.Finally in the end of the process the vizualization screen you start:
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/a7V2EouMkcE/0.jpg)](https://www.youtube.com/watch?v=a7V2EouMkcE)
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/a7V2EouMkcE/0.jpg)](https://www.youtube.com/watch?v=6q6ktkIAwmg)
 
 ## Final Considerations
 
 - You can change the ship dynamics and adapt for your needs in: simulator.py
 
-- You can change the reward and state design in: ship_env.py (DDPG) and ship_env_discrete (DQN).
+- You can change the reward and state design in: ship_env.py
 
 - You can change the network hyperparameter in ddpg.py or dqn.py
+
+- You can evaluate the learing process and the states evolution in evaluate_learning.py
 
 ## How to cite us?
 
