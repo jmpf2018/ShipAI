@@ -64,7 +64,11 @@ or
 
 - You can evaluate the learing process and the states evolution in evaluate_learning.py
 
+## Paper
+To read our paper check [this link](https://github.com/jmpf2018/ShipAI/blob/master/PEREIRA_Jonathas_Rejaili_Rodrigo_Paper_ShipAI_TCC.pdf).
+
 ## How to cite us?
+
 
 @misc{shipAI,
 
